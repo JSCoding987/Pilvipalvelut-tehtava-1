@@ -1,6 +1,7 @@
 body {
   text-align: center;
   font-family: Arial, sans-serif;
+  background-color: gray;
 }
 
 ul {
@@ -19,4 +20,9 @@ li {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: darkblue;
 }
