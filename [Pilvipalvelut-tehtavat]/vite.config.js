@@ -7,5 +7,6 @@ export default defineConfig({
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] })
-  ],
+  ], 
+  base: '/Pilvipalvelut-tehtavat/Tehtävä_3/',
 })
