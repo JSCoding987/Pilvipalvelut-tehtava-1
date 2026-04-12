@@ -4,7 +4,7 @@ import './App.css'
 function App() {
   const [codename, setCodename] = useState('');
 
-
+  // Tehtävän 3.3 mukainen generointifunktio
   const generateCodename = () => {
     const adjectives = ["Sneaky", "Electric", "Silent", "Hyper", "Cosmic"];
     const animals = ["Fox", "Panda", "Lizard", "Dragon", "Hawk"];
@@ -16,44 +16,34 @@ function App() {
     return `${adj}${animal}${number}`;
   };
 
-  
+  // Tehtävän 3.2 & 3.4 mukainen logiikka (suoritetaan latauksessa)
   useEffect(() => {
-    
+    // 1. Haetaan nimi Local Storagesta
     const cachedName = localStorage.getItem("codename");
 
     if (cachedName) {
-     
+      // 2. Jos nimi löytyy, käytetään sitä
       setCodename(cachedName);
     } else {
-    
+      // 3. Jos nimeä ei ole, generoidaan uusi ja tallennetaan se
       const newName = generateCodename();
       setCodename(newName);
       localStorage.setItem("codename", newName);
     }
-  }, []);
-
-  
-  const handleNewName = () => {
-    const newName = generateCodename();
-    setCodename(newName);
-    localStorage.setItem("codename", newName);
-  };
+  }, []); // Tyhjä taulukko varmistaa, että tämä ajetaan vain kerran "kirjautuessa"
 
   return (
     <div className="container">
       <h1>Koodinimi-sovellus</h1>
       
       <div className="display-card">
-        <p>Tervetuloa takaisin! Sinun koodinimesi on:</p>
+        <p>Tervetuloa! Koodinimesi on:</p>
         <h2 className="codename">{codename}</h2>
       </div>
 
-      <button onClick={handleNewName} className="btn-primary">
-        Haluatko uuden nimen?
-      </button>
-
-      <p className="footer-info">
-        Nimesi tallentuu poistumisen jälkeen
+      <p className="info-text">
+        Koodinimesi on tallennettu selaimen muistiin (Local Storage). 
+        Se säilyy samana, vaikka lataisit sivun uudelleen.
       </p>
     </div>
   )
