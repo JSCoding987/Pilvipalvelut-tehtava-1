@@ -16,7 +16,11 @@ const LoginForm = () => {
       await loginWithEmail(email, password);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        if (err.message.includes("auth/invalid-credential")) {
+          setError("Väärä sähköposti tai salasana.");
+        } else {
+          setError(err.message);
+        }
       } else {
         setError("Tuntematon virhe");
       }
@@ -26,35 +30,46 @@ const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Kirjaudu sisään</h2>
+    <div className="login-container">
+      <form onSubmit={handleSubmit}>
 
-      <div>
-        <label>Sähköposti</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <div className="login-form-group">
+          <label htmlFor="email">Sähköposti</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="nimi@sähköposti.fi"
+          />
+        </div>
+
+        <div className="login-form-group">
+          <label htmlFor="password">Salasana</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="******"
+          />
+        </div>
+
+        {error && <p className="error-message" style={{ color: "red", fontSize: "0.9rem" }}>{error}</p>}
+
+        <button type="submit" className="login-button" disabled={loading}>
+          {loading ? "Kirjaudutaan..." : "Kirjaudu"}
+        </button>
+      </form>
+
+      <div className="test-credentials">
+        <p><strong>Testitunnukset:</strong></p>
+        <p>Email: <code>testaaja@testaus.fi</code></p>
+        <p>Salasana: <code>SalainenSana</code></p>
       </div>
-
-      <div>
-        <label>Salasana</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <button type="submit" disabled={loading}>
-        {loading ? "Kirjaudutaan..." : "Kirjaudu"}
-      </button>
-    </form>
+    </div>
   );
 };
 

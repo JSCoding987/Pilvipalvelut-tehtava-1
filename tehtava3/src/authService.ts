@@ -11,9 +11,7 @@ import firebaseConfig from "../firebaseConfig";
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-/**
- * Kirjautuminen sähköposti + salasana
- */
+
 export const loginWithEmail = async (
   email: string,
   password: string
@@ -26,9 +24,7 @@ export const loginWithEmail = async (
   return result.user;
 };
 
-/**
- * Käyttäjän rekisteröinti (Ei tässä tehtävässä välttämätön)
- */
+
 export const registerWithEmail = async (
   email: string,
   password: string
@@ -41,9 +37,7 @@ export const registerWithEmail = async (
   return result.user;
 };
 
-/**
- * Kirjautuminen ulos
- */
+
 export const logout = async (): Promise<void> => {
   await signOut(auth);
 };
