@@ -3,81 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytiikkaraportti - Hintavisa</title>
+    <title>Analytiikka ja CORS-hallinta - Tehtävä 6.3</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
             color: #333;
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
-            padding: 2rem;
-            background-color: #f4f7f6;
+            padding: 30px;
+            background-color: #f0f2f5;
         }
-        .container {
+        .paper {
             background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
-        h2 { color: #2980b9; margin-top: 1.5rem; }
-        .tag {
+        h1 { color: #1a3a5f; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2c3e50; margin-top: 30px; font-size: 1.4rem; }
+        p { margin-bottom: 1.2rem; text-align: justify; }
+        .highlight-box {
+            background-color: #e8f4fd;
+            border-left: 5px solid #3498db;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+        ul { margin-bottom: 20px; }
+        li { margin-bottom: 10px; }
+        .back-link {
             display: inline-block;
-            background: #e1f5fe;
-            color: #01579b;
-            padding: 0.2rem 0.6rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-decoration: none;
             font-weight: bold;
         }
-        ul { padding-left: 1.2rem; }
-        li { margin-bottom: 0.5rem; }
-        .status-ok { color: #27ae60; font-weight: bold; }
-        footer { margin-top: 2rem; text-align: center; font-size: 0.9rem; color: #7f8c8d; }
-        .back-link { display: inline-block; margin-bottom: 1rem; color: #3498db; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
     </style>
 </head>
 <body>
     <a href="index.html" class="back-link">← Takaisin peliin</a>
-    <div class="container">
-        <h1>📊 Analytiikan toteutus (Tehtävä 6.3)</h1>
-        
-        <p>Tämä sivu kuvaa Hintavisa-sovellukseen tehdyn analytiikkaintegraation tekniset vaiheet, haasteet ja ratkaisut.</p>
+    
+    <div class="paper">
+        <h1>📈 Verkkoseurannan hyödyntäminen ja CORS-hallinta</h1>
 
-        <h2>1. Tekninen valinta</h2>
-        <p>Seurantaan valittiin <span class="tag">Cloudflare Web Analytics</span> sen yksityisyyttä kunnioittavan lähestymistavan vuoksi. Toisin kuin perinteiset työkalut, se ei käytä evästeitä käyttäjien seuraamiseen, mikä vastaa nykyaikaisia tietosuojavaatimuksia.</p>
+        <h2>Seurannan hyödyt sovelluskehityksessä</h2>
+        <p>
+            Verkkoseuranta eli analytiikka on keskeinen työkalu nykyaikaisen sovelluksen jatkokehityksessä. Sen ensisijainen hyöty on <strong>käyttäjäkokemuksen (UX) optimointi</strong>: seuraamalla, missä kohdassa käyttäjät poistuvat sovelluksesta tai mihin toimintoihin he käyttävät eniten aikaa, voidaan tunnistaa käytettävyysongelmia. Esimerkiksi tässä pelissä analytiikka paljastaisi, ovatko pelin ohjeet riittävän selkeät vai keskeytyykö peli heti alussa mahdollisten epäselvyyksien vuoksi.
+        </p>
+        <p>
+            Toiseksi seuranta auttaa <strong>teknisessä laadunvarmistuksessa</strong>. Sen avulla voidaan havaita laite- tai selainkohtaisia virheitä, joita ei rajatussa kehitysympäristössä huomattu. Kolmanneksi analytiikka mahdollistaa <strong>A/B-testauksen</strong>, jossa käyttäjille näytetään eri versioita käyttöliittymästä ja mitataan, kumpi versio johtaa parempaan sitoutumiseen. Nykyaikainen, yksityisyyttä kunnioittava seuranta, kuten tässä toteutettu Cloudflare Web Analytics, tarjoaa nämä edut ilman yksittäisten käyttäjien tunnistamista tai evästeiden käyttöä, tasapainottaen tiedonkeruun ja yksityisyyden suojan välisen suhteen.
+        </p>
 
-        <h2>2. Suostumuksen hallinta (GDPR)</h2>
-        <p>Vaikka käytetty analytiikka on anonyymiä, sovellukseen toteutettiin <strong>Consent Banner</strong> -komponentti:</p>
-        <ul>
-            <li>Analytiikkaskriptiä ei ladata ennen kuin käyttäjä painaa "Hyväksy".</li>
-            <li>Suostumus tallennetaan selaimen <code>localStorage</code>-muistiin.</li>
-            <li>Toteutus on tehty Reactin <code>useEffect</code>-koukkua hyödyntäen, joka injektoi skriptin DOM-puuhun vasta luvalla.</li>
-        </ul>
-
-        <h2>3. Ratkaistut haasteet</h2>
-        <ul>
-            <li>
-                <strong>CORS-politiikka:</strong> GitHub Pages -osoitteesta (jscoding987.github.io) tulevat pyynnöt estettiin aluksi. 
-                <span class="status-ok">Ratkaistu:</span> Cloudflaren Hostname-asetukset päivitettiin sallimaan kyseinen domain.
-            </li>
-            <li>
-                <strong>Firebase OAuth:</strong> Peli antoi varoituksen valtuuttamattomasta domainista. 
-                <span class="status-ok">Ratkaistu:</span> Domain lisätiin Firebasen <em>Authorized Domains</em> -listalle.
-            </li>
-            <li>
-                <strong>DOM-validointi:</strong> Konsoli ilmoitti virheellisestä taulukkorakenteesta.
-                <span class="status-ok">Ratkaistu:</span> <code>RoundResult.tsx</code> korjattiin käyttämään oikeaoppisia <code>&lt;tr&gt;</code> ja <code>&lt;td&gt;</code> elementtejä.
-            </li>
-        </ul>
-
-        <h2>4. Toiminnan varmistus</h2>
-        <p>Analytiikan toimivuus on varmistettu selaimen kehittäjätyökaluilla. Verkkoliikenne osoittaa, että <code>beacon.min.js</code> latautuu ja lähettää <code>rum</code>-tapahtumia onnistuneesti (Status 202) suostumuksen jälkeen.</p>
+        <div class="highlight-box">
+            <h2>Miten CORS-ongelman voi välttää?</h2>
+            <p>
+                CORS-virheet (Cross-Origin Resource Sharing) ovat yleisiä, kun selain estää pyynnöt eri osoitteiden välillä tietoturvasyistä. Ongelman välttämiseen on kolme pääasiallista tapaa:
+            </p>
+            <ul>
+                <li>
+                    <strong>Palvelinpään konfigurointi (Suositeltu tapa):</strong> 
+                    Vastaanottavan palvelimen tulee palauttaa HTTP-otsake <code>Access-Control-Allow-Origin</code>, joka sisältää sovelluksesi osoitteen. Kehittäjän on lisättävä oma domaininsa (esim. <em>jscoding987.github.io</em>) palveluntarjoajan sallittujen lähteiden listalle.
+                </li>
+                <li>
+                    <strong>Samassa osoitteessa pysyminen:</strong> 
+                    Ongelma vältetään kokonaan, jos API-pyynnöt tehdään samaan alkuperään (origin), jossa sovellus sijaitsee. Tämä voidaan toteuttaa proxy-palvelimella tai sijoittamalla skriptit samalle palvelimelle.
+                </li>
+                <li>
+                    <strong>Välityspalvelimen (Proxy) käyttö:</strong> 
+                    Kehitysvaiheessa voidaan käyttää välityspalvelinta, joka kiertää rajoitukset lisäämällä tarvittavat otsakkeet pyyntöön. Esimerkiksi Vite-ympäristössä tämä määritellään <code>vite.config.ts</code> -asetuksissa.
+                </li>
+            </ul>
+        </div>
     </div>
 
     <footer>
-        &copy; 2026 Hintavisa Kehitystiimi
+        Tehtävä 6.3 - Analytiikka ja tietoturva | Toukokuu 2026
     </footer>
 </body>
 </html>
