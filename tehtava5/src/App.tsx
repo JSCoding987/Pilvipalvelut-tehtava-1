@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import LoginForm from './loginForm';
 import { auth, logout } from './authService';
@@ -6,10 +6,35 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { getOrGenerateCodename } from './codenameService';
 import { QuizForm } from './Components/QuizForm';
 import { RoundResult } from './Components/RoundResult';
+import ConsentBanner, { getConsent } from './Components/ConsentBanner';
 import { createSession, submitGuess, joinSession, startGame, nextRound, closeSession } from './Game';
 import { onSnapshot, doc, collection, query, where } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Session } from './types/Session';
+
+// --- ANALYTIIKKA-HOOKKI (6.2.3) ---
+function useCloudflareAnalytics() {
+  const trackEvent = useCallback(
+    (eventName: string, data?: Record<string, any>) => {
+      if (!getConsent()) return; // Tarkistetaan 6.1 kohdan suostumus
+      if (!window._cfq) {
+        window._cfq = [];
+      }
+
+      window._cfq.push([
+        "trackEvent",
+        {
+          name: eventName,
+          ...data,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    },
+    []
+  );
+
+  return { trackEvent };
+}
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -17,6 +42,20 @@ function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [availableSessions, setAvailableSessions] = useState<Session[]>([]);
 
+  // --- ANALYTIIKAN ALUSTUS (6.2.2) ---
+  const { trackEvent } = useCloudflareAnalytics();  
+  const initialReferrer = useRef<string>(
+    document.referrer || "direct"
+  );
+
+  useEffect(() => {
+    trackEvent("page_view", {
+      referrer: initialReferrer.current,
+      landingPath: window.location.pathname,
+    });
+  }, [trackEvent]);
+
+  // 1. Käyttäjän kirjautumistilan seuranta
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
@@ -25,6 +64,7 @@ function App() {
     return () => unsubscribeAuth();
   }, []);
 
+  // 2. Avoimien pelien haku (Lobby)
   useEffect(() => {
     if (!user) return;
     const q = query(collection(db, "sessions"), where("status", "==", "waiting"));
@@ -34,6 +74,7 @@ function App() {
     return () => unsubscribe();
   }, [user]);
 
+  // 3. Valitun pelisession reaaliaikainen seuranta
   useEffect(() => {
     if (!session?.id) return;
     const unsubscribeSession = onSnapshot(doc(db, "sessions", session.id), (docSnap) => {
@@ -44,10 +85,13 @@ function App() {
     return () => unsubscribeSession();
   }, [session?.id]);
 
+  // --- Toiminnot ---
+
   const handleCreateGame = async () => {
     if (user) {
       const id = await createSession(`${codename}n peli`, user.uid, codename);
       setSession({ id } as Session);
+      trackEvent("game_created", { creator: codename }); // Analytiikka-tapahtuma
     }
   };
 
@@ -55,6 +99,7 @@ function App() {
     if (user) {
       await joinSession(sessionId, user.uid, codename);
       setSession({ id: sessionId } as Session);
+      trackEvent("game_joined", { player: codename }); // Analytiikka-tapahtuma
     }
   };
 
@@ -81,6 +126,9 @@ function App() {
 
   return (
     <div className="main-wrapper">
+      {/* ANALYTIIKAN SUOSTUMUSBANNERI (6.1) */}
+      <ConsentBanner />
+
       <header className="game-header">
         <h1>Hintavisa 💰</h1>
         {user && (
@@ -88,13 +136,13 @@ function App() {
             <span>Pelaaja: <strong>{codename}</strong></span>
             <button className="logout-btn" onClick={handleLogout}>Kirjaudu ulos</button>
           </div>
-          
         )}
       </header>
 
       {!user ? (
         <LoginForm />
       ) : !session?.id ? (
+        /* --- AULA / LOBBY --- */
         <div className="lobby-selection card">
           <button onClick={handleCreateGame} className="create-btn">Luo uusi peli</button>
           
@@ -111,7 +159,7 @@ function App() {
           </div>
         </div>
       ) : (
-       
+        /* --- PELIALUE --- */
         <div className="game-area">
           <div className="status-bar">Erä {session.currentRound || 1} / 5 | {session.name}</div>
           
@@ -129,7 +177,7 @@ function App() {
           {session.status === "playing" && (
             <div className="play-section">
               {!allPlayersGuessed() ? (
-               
+                /* Arvausvaihe */
                 session.players[user.uid]?.guess !== undefined && session.players[user.uid]?.guess !== null ? (
                   <div className="card"><h3>Arvaus lähetetty! Odotetaan muita... ⏳</h3></div>
                 ) : (
@@ -141,7 +189,7 @@ function App() {
                   />
                 )
               ) : (
-              
+                /* Kierroksen tulokset */
                 <div className="card result-card">
                   <RoundResult 
                     players={Object.values(session.players)} 
@@ -150,7 +198,7 @@ function App() {
                   
                   <div className="round-controls" style={{ marginTop: '20px' }}>
                     {(session.currentRound || 1) < 5 ? (
-                    
+                      /* Jos peli on kesken */
                       session.createdBy === user.uid ? (
                         <button className="next-btn" onClick={() => nextRound(session.id, session.players)}>
                           Seuraava kierros ➡️
@@ -159,7 +207,7 @@ function App() {
                         <p>Luoja aloittaa pian uuden kierroksen...</p>
                       )
                     ) : (
-              
+                      /* Jos 5 erää täynnä */
                       <div className="final-screen">
                         <h2 style={{color: 'var(--secondary)'}}>Peli ohi! 🎉</h2>
                         <button className="create-btn" onClick={handleExitGame}>
